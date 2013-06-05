@@ -1,8 +1,23 @@
-Minimal Underscore.js-based Template Engine
-===========================================
+mute.js
+=======
 
-mute.js is a simple client-side template engine with caching capabilities based on underscore.js.
+mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine. It is simple, client-side, and provides caching capabilities.
 
+Why?
+
+1. EJS (embedded JavaScript) is the best templating language
+2. Existing solutions are not satiffying
+  - http://embeddedjs.com/ completely lacks documentation, has to much functionality, and is not that actively developed.
+  - underscore.js' template function is simple, but lacks convenience.
+
+mute.js was developed as a layer above underscore.js to provide a comfortable usage while staying small and simple.
+
+Install
+=======
+
+mute.js uses underscore.js, therefore, if not already present, you have to load underscore.js.
+
+Now just load the script, it will create a *mute* object in the browser's global scope.
 
 Simple Usage Scenario
 =====================
