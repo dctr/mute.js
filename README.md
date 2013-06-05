@@ -7,11 +7,17 @@ mute.js is a simple client-side template engine with caching capabilities based 
 Simple Usage Scenario
 =====================
 
+Some source and explanation.
+
+Source
+------
+
 yourSite.html
 
 ```html
 <!doctype html>
 <meta charset="utf-8">
+<script src="yourSite.js"></script>
 <title>My cool site</title>
 <form action="#" id="js-login">
   <input type="text" name="username" placeholder="Username" autofocus>
@@ -55,7 +61,17 @@ muteScript('login', function (render, data) {
 
 template/login.ejs
 
-```ejs
+```html
 <h1>Login Page</h1>
 <p><%= message %></p>
 ```
+
+Explanation
+-----------
+
+- **yourSite.html** defines the HTML skeletion. It might contain header, footer, navigation, .... It's <div role="main" /> remains empty, as it is to be filled with content through mute.js.
+- **yourSite.js** is you regular site-managin JavaScript. It defines an event handler for the submit button in the login form of the HTML page. If the submit button is clicked, the form data is submitted to mute.js' render function.
+- **templates/login.js** contains all code to process the given information.
+  - **render** is the callback function that has to be called with an object, which's properties should be available in the template.
+  - **data** is the object provided in the call to render in yourSite.js.
+- **templates/login.ejs** is an embedded JavaScript file. It has access to all the properties of the object provided though the login.js callback.
