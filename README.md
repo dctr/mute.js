@@ -1,7 +1,7 @@
 mute.js
 =======
 
-mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine. It is simple, client-side, and provides caching capabilities.
+mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine that used EJS (embedded JavaScript) as templating language. It is simple, client-side, and provides caching capabilities.
 
 Why?
 
