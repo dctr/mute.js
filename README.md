@@ -1,5 +1,5 @@
-(**M**inimal **U**nderscore.js-based **T**emplate **E**ngine)
-=============================================================
+Minimal Underscore.js-based Template Engine
+===========================================
 
 mute.js is a simple client-side template engine with caching capabilities based on underscore.js.
 
