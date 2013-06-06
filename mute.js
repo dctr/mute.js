@@ -42,10 +42,9 @@
    * @return {object}          A mute instance for the CSS selector.
    */
   constructor = function (selector, ejsDir, jsDir) {
-    var that, back, currentContent, forth, noBackForth, redirects, renderCompiledTemplate;
+    var that, applyTemplate, back, currentContent, forth, noBackForth, redirects, renderCompiledTemplate;
 
-    if (typeof selector !== 'string' ||
-        typeof ejsDir   !== 'string' ||
+    if (typeof ejsDir   !== 'string' ||
         typeof jsDir    !== 'string') {
       throw {name: 'MuteError', message: 'Invalid call of mute().'};
     }
@@ -62,11 +61,21 @@
             back.push(currentContent);
           }
           currentContent = cachedTemplates[template](processedData);
-          document.querySelector(selector).innerHTML = currentContent;
+          applyTemplate(currentContent);
         },
         data
       );
     };
+
+    if (typeof selector === 'string') {
+      applyTemplate = function (content) {
+        document.querySelector(selector).innerHTML = content;
+      };
+    } else if (typeof selector === 'function') {
+      applyTemplate = function (content) {
+        selector(content);
+      };
+    }
 
 
     that = {};
@@ -82,7 +91,7 @@
       if (!upcomming) { return; }
       forth.push(currentContent);
       currentContent = upcomming;
-      document.querySelector(selector).innerHTML = currentContent;
+      applyTemplate(currentContent);
       return back.length;
     };
 
@@ -96,7 +105,7 @@
       if (!upcomming) { return; }
       back.push(currentContent);
       currentContent = upcomming;
-      document.querySelector(selector).innerHTML = currentContent;
+      applyTemplate(currentContent);
       return forth.length;
     };
 

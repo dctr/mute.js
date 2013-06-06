@@ -1,7 +1,7 @@
 mute.js
 =======
 
-mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine that used EJS (embedded JavaScript) as templating language. It is simple, client-side, and provides caching capabilities.
+mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine that used EJS (embedded JavaScript) as templating language. It is simple, client- or server-side, and provides caching capabilities.
 
 Why?
 
@@ -19,10 +19,10 @@ mute.js uses underscore.js, therefore, if not already present, you have to load 
 
 Now just load the script, it will create a *mute* object in the browser's global scope.
 
-Simple Usage Scenario
-=====================
+Usage Scenario 1 - Set inner HTML of element
+============================================
 
-Some source and explanation.
+Some source and explanation for a client-side usage scenario.
 
 Source
 ------
@@ -90,3 +90,55 @@ Explanation
   - **render** is the callback function that has to be called with an object, which's properties should be available in the template.
   - **data** is the object provided via the call to render in yourSite.js.
 - **templates/login.ejs** is an embedded JavaScript file. It has access to all the properties of the object provided though the login.js callback. Here it has access to message, but also to username and password.
+
+Usage Scenario 2 - Output to a callback
+=======================================
+
+This example works well on both, server- and client-side.
+
+
+Source
+------
+
+youScript.js
+
+```javascript
+var renderCallback = function (string) {
+  console.log('The rendered output is:');
+  console.log(string);
+
+}
+var mytpl = mute(renderCallback, '/templates', '/templates');
+
+mytpl.render(
+  'something',
+  {
+    input1: 'Something to display in the template site.',
+    input2: 'Something to process by the template script.'
+  }
+);
+```
+
+templates/something.js
+
+```javascript
+muteScript('something', function (render, data) {
+  doCoolStuff(data.input2);
+  render(data);
+});
+```
+
+template/something.ejs
+
+```html
+<h1>Some site</h1>
+<h2>A message</h2>
+<p><%= input1 %></p>
+<h2>Processed data</h2>
+<p><%= input2 %></p>
+```
+
+Explanation
+-----------
+
+As in the first scenario, the template is rendered. But instead of filling the inner HTML of a given selector (e.g. 'div[role="main"]' in scenario 1), the callback is invoked with the rendered string.
