@@ -44,8 +44,8 @@
   constructor = function (selector, ejsDir, jsDir) {
     var that, applyTemplate, back, currentContent, forth, noBackForth, redirects, renderCompiledTemplate;
 
-    if (typeof ejsDir   !== 'string' ||
-        typeof jsDir    !== 'string') {
+    if (typeof ejsDir !== 'string' ||
+        typeof jsDir  !== 'string') {
       throw {name: 'MuteError', message: 'Invalid call of mute().'};
     }
 
@@ -55,13 +55,18 @@
 
     // Compiles memoized templates.
     renderCompiledTemplate = function (template, data) {
+      if (typeof data === 'function') {
+        data();
+        return;
+      }
       cachedScripts[template](
-        function (processedData) {
+        function (processedData, args) {
           if (currentContent !== back[back.length - 1]) {
+            // TODO: back and forth not necessary, if rendering to function.
             back.push(currentContent);
           }
           currentContent = cachedTemplates[template](processedData);
-          applyTemplate(currentContent);
+          applyTemplate(currentContent, args);
         },
         data
       );
@@ -72,8 +77,8 @@
         document.querySelector(selector).innerHTML = content;
       };
     } else if (typeof selector === 'function') {
-      applyTemplate = function (content) {
-        selector(content);
+      applyTemplate = function (content, args) {
+        selector(content, args);
       };
     }
 
@@ -88,7 +93,7 @@
      */
     that.backwards = function () {
       var upcomming = back.pop();
-      if (!upcomming) { return; }
+      if (!upcomming) { return -1; }
       forth.push(currentContent);
       currentContent = upcomming;
       applyTemplate(currentContent);
@@ -102,7 +107,7 @@
      */
     that.forwards = function () {
       var upcomming = forth.pop();
-      if (!upcomming) { return; }
+      if (!upcomming) { return -1; }
       back.push(currentContent);
       currentContent = upcomming;
       applyTemplate(currentContent);
@@ -111,15 +116,18 @@
 
     /**
      * Render a template
-     * @param  {string} template Template name (also filename without extension).
-     * @param  {object} data     A data object which will be present within the corresponding script and the template.
+     * @param  {string}   template Template name (also filename without extension).
+     * @param  {object}   data     A data object which will be present within the corresponding script and the template.
+     * @param  {function} data     A prefetch-callback which will be called, if the XMLHttpRequests to template are finished. No rendering done!
      */
     that.render = function (template, data) {
       var ex, reqTpl;
 
       if (!/^[A-Za-z0-9]*$/.test(template) ||
-          (data && typeof data !== 'object')
+          (data && typeof data !== 'object' && typeof data !== 'function')
           ) {
+        console.log(typeof data);
+        console.log(template);
         throw {
           name: 'MuteError',
           message: 'Invalid call to render().'
@@ -144,6 +152,7 @@
         reqTpl.onload = function (e) {
           var reqScr;
           // NOTE: A 304 from the server results in a client-side 200.
+          // TODO: Handle errors.
           if (this.status !== 200) { throw ex; }
           cachedTemplates[template] = _.template(this.response);
           reqScr = new XMLHttpRequest();
