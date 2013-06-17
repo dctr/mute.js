@@ -23,6 +23,8 @@
   parallel = function (funcs, cb) {
     // TODO: Refactor for arrays only
     var c, errs, has_errs, k, next, ress;
+    var global = global || {};
+    var process = process || {};
     next = global.setImmediate || process.nextTick || setTimeout;
     c = typeof funcs === 'object' ?
         Object.keys(funcs).length :
