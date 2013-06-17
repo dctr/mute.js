@@ -11,83 +11,129 @@
 (function (modulename) {
   'use strict';
 
-  var constructor, cachedScripts, muteScript, cachedTemplates, renderCompiledTemplate;
+  var constructor, cachedScripts, cachedTemplates;
+
+
+  // -----
+  // Private Static
+  // ----------
 
   cachedScripts = {};
   cachedTemplates = {};
-
-  /**
-   * Cache a script with a given name
-   * @param  {string}   template The name of the template.
-   * @param  {function} script   The function to be executed on template execution.
-   */
-  muteScript = function (template, script) {
-    if (!/^[A-Za-z0-9]*$/.test(template) ||
-        typeof script !== 'function') {
-      throw {
-        name: 'MuteError',
-        message: 'Invalid call to muteScript().'
-      };
-    }
-    cachedScripts[template] = script;
-  };
 
   /**
    * Function to export as global mute object
    *
    * This is a function creating a template engine instance for a certain CSS selector.
    * It is enrichted by "static" functions below.
-   * @param  {string} selector A CSS selector defining the Element which's content should be replaced by a template.
-   * @param  {string} ejsDir   URL path which contains the EJS files.
-   * @param  {string} jsDir    URL path which contains the JS files.
-   * @return {object}          A mute instance for the CSS selector.
+   * @param  {string} ejsDir  URL path which contains the EJS files.
+   * @param  {string} jsDir   URL path which contains the JS files.
+   * @param  {string} target  A CSS selector defining the Element which's content should be replaced by a template. Can be empty if rendered output should only provided through the callback of render().
+   * @return {object}         A mute instance for the CSS selector.
    */
-  constructor = function (selector, ejsDir, jsDir) {
-    var that, applyTemplate, currentContent, mutePushState, noBackForth, redirects, renderCompiledTemplate;
+  constructor = function (spec) {
+    var that, cache, ejsDir, jsDir, muteScript, preprocessTemplate, redirects, renderCompiledTemplate;
 
-    if (typeof ejsDir !== 'string' ||
-        typeof jsDir  !== 'string') {
-      throw {name: 'MuteError', message: 'Invalid call of mute().'};
-    }
+    // -----
+    // Validate input
+    // ----------
+
+    // NICETOHAVE: Check input for /^[A-Za-z0-9\/]*$/
+
+    ejsDir = spec.ejsDir || '/templates';
+    jsDir = spec.jsDir || '/templates';
+
+    cachedScripts[jsDir] = {};
+    cachedTemplates[ejsDir] = {};
+
+
+    // -----
+    // Private non-static
+    // ----------
+    // TODO: Make history (use browser's pushState for back/forth buttons).
 
     redirects = {};
 
+    cache = function (spec, callback, callbackArguments) {
+      var err, reqTpl, reqScr, template;
 
-    if (typeof selector === 'string') {
-      applyTemplate = function (content) {
-        document.querySelector(selector).innerHTML = content;
-      };
-    } else if (typeof selector === 'function') {
-      applyTemplate = function (content, args) {
-        selector(content, args);
-      };
-    }
+      template = spec.template;
 
-    // TODO: Make history
-    // if (typeof window !== 'undefined') {
-    //   mutePushState = window.pushState;
-    // } else {
-    //   mutePushState = function () {};
-    // }
-
-    // Compiles memoized templates.
-    renderCompiledTemplate = function (template, data) {
-      // If data is a render prefetch callback.
-      if (typeof data === 'function') {
-        data();
+      if (cachedTemplates[ejsDir][template]) {
+        callback(undefined, callbackArguments);
         return;
       }
-      cachedScripts[template](
-        function (processedData, args) {
-          // if (currentContent !== back[back.length - 1]) {
-          //   // TODO: back and forth not necessary, if rendering to function.
-          //   back.push(currentContent);
-          // }
-          // currentContent = cachedTemplates[template](processedData);
-          // applyTemplate(currentContent, args);
-          applyTemplate(cachedTemplates[template](processedData), args);
-        },
-        data
+
+      err = new Error('Failed to load template "' + template + '".');
+
+      reqTpl = new XMLHttpRequest();
+      reqTpl.open('GET', ejsDir + '/' + template + '.ejs');
+      reqTpl.onload = function (e) {
+        // NOTE: A 304 from the server results in a client-side 200.
+        if (this.status !== 200) {
+          callback(err, callbackArguments);
+        }
+        cachedTemplates[ejsDir][template] = _.template(
+          // TODO: This is async!!
+          preprocessTemplate(
+            {ejs: this.response},
+            callback,
+            callbackArguments
+          )
+        );
+        reqScr = new XMLHttpRequest();
+        reqScr.open('GET', jsDir + '/' + template + '.js');
+        reqScr.onload = function (e) {
+          // NOTE: A 304 from the server results in a client-side 200.
+          if (this.status !== 200) {
+            callback(err, callbackArguments);
+          }
+          eval(this.response.trim() + ';');
+          // NOTE: No need to cache the script, as it calls muteScript() itself.
+        };
+        reqScr.send();
+      };
+      reqTpl.send();
+    };
+
+    /**
+     * Cache a script with a given name
+     * @param  {string}   template The name of the template.
+     * @param  {function} script   The function to be executed on template execution.
+     */
+    muteScript = function (template, script) {
+      // NICETOHAVE: Check input for /^[A-Za-z0-9]*$/
+      if (cachedScripts[jsDir][template]) { return; }
+      cachedScripts[jsDir][template] = script;
+    };
+
+    preprocessTemplate = function (spec, callback, callbackArguments) {
+      var ejs = spec.ejs;
+      callback(
+        ejs.replace(
+          /<%\s*include\s*(.*?)\s*%>/g,
+          function (matchedText, template) {
+            cache(template);
+            return cachedTemplates[ejsDir][template];
+          }
+        ),
+        callbackArguments
+      );
+    };
+
+    // Compiles memoized templates.
+    renderCompiledTemplate = function (err, spec, callback, callbackData) {
+      if (err) { callback(err, undefined, callbackData); }
+      cachedScripts[jsDir][spec.template](
+        spec.data,
+        function (processedData, cb, cbData) {
+          var html = cachedTemplates[ejsDir][spec.template](processedData);
+          if (spec.target) {
+            document.querySelector(spec.target).innerHTML = html;
+          }
+          cb(undefined, html, cbData);
+          callback(undefined, html, callbackData);
+        }
       );
     };
 
@@ -96,54 +142,20 @@
 
     /**
      * Render a template
-     * @param  {string}   template Template name (also filename without extension).
-     * @param  {object}   data     A data object which will be present within the corresponding script and the template.
-     * @param  {function} data     A prefetch-callback which will be called, if the XMLHttpRequests to template are finished. No rendering done!
+     * @param  {string}   template           Template name (also filename without extension).
+     * @param  {object}   data               A data object which will be present within the corresponding script and the template.
+     * @param  {function} callback           A function to call, when rendering is done. fn(err, res, cbArgs)
+     * @param  {object}   callbackArguments  An object to provide to the callback as additional parameter
      */
-    that.render = function (template, data) {
-      var ex, reqTpl;
-
-      if (!/^[A-Za-z0-9]*$/.test(template) ||
-          (data && typeof data !== 'object' && typeof data !== 'function')
-          ) {
-        throw {
-          name: 'MuteError',
-          message: 'Invalid call to render().'
-        };
-      }
-      data = data || {};
-      if (redirects[template]) {
-        template = redirects[template];
-      }
-      ex = {
-        name: 'MuteError',
-        message: 'Could not retrieve template.'
-      };
-
-      // If a cached template exists, the corresponding script is also cached.
-      if (cachedTemplates[template]) {
-        renderCompiledTemplate(template, data);
-      } else {
-        // TODO: Replace with native functions.
-        reqTpl = new XMLHttpRequest();
-        reqTpl.open('GET', ejsDir + '/' + template + '.ejs');
-        reqTpl.onload = function (e) {
-          var reqScr;
-          // NOTE: A 304 from the server results in a client-side 200.
-          // TODO: Handle errors.
-          if (this.status !== 200) { throw ex; }
-          cachedTemplates[template] = _.template(this.response);
-          reqScr = new XMLHttpRequest();
-          reqScr.open('GET', jsDir + '/' + template + '.js');
-          reqScr.onload = function (e) {
-            if (this.status !== 200) { throw ex; }
-            eval(this.response.trim() + ';');
-            renderCompiledTemplate(template, data);
-          };
-          reqScr.send();
-        };
-        reqTpl.send();
-      }
+    that.render = function (spec, callback, callbackArguments) {
+      // NICETOHAVE: Check input for /^[A-Za-z0-9]*$/
+      callback = callback || function () {};
+      spec.template = redirects[spec.template] || spec.template;
+      cache(
+        spec,
+        renderCompiledTemplate,
+        spec
+      );
     };
 
     /**
@@ -152,13 +164,7 @@
      * @param  {string} target Which template should be displayed instead
      */
     that.setRedirect = function (source, target) {
-      if (!/^[A-Za-z0-9]*$/.test(source) ||
-          !/^[A-Za-z0-9]*$/.test(target)) {
-        throw {
-          name: 'MuteError',
-          message: 'Invalid call to setRedirect().'
-        };
-      }
+      // NICETOHAVE: Check input for /^[A-Za-z0-9]*$/
       redirects[source] = target;
     };
 
@@ -171,12 +177,7 @@
    * @return {string}     The processed string
    */
   constructor.br2nl = function (str) {
-    if (typeof str !== 'string') {
-      throw {
-        name: 'MuteError',
-        message: 'Invalid call to br2nl().'
-      };
-    }
+    if (typeof str !== 'string') { return str; }
     return str.replace(/<br\s*\/?>/mg, '\n');
   };
 
@@ -198,12 +199,7 @@
    * @return {string}     The processed string
    */
   constructor.nl2br = function (str) {
-    if (typeof str !== 'string') {
-      throw {
-        name: 'MuteError',
-        message: 'Invalid call to nl2br().'
-      };
-    }
+    if (typeof str !== 'string') { return str; }
     var breakTag = '<br />';
     return str.replace(
       /(\r\n|\n\r|\r|\n)/mg,
