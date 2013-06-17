@@ -12,17 +12,17 @@
     console.log(cbArgs);
   };
 
-  var mymute = mute('./tpl', './tpl', 'div[role="main"]');
+  var mymute = mute('/tpl', '/tpl', 'div[role="main"]');
   mymute.render(
     'sometpl',
     {date1: 'value1', date2: 'value2'},
     myfunc,
     {chosen: 'sometpl'}
   );
-  mymute.render(
-    'nonexistent',
-    {foo: 'bar'},
-    myfunc,
-    {chosen: 'nonexistent'}
-  );
+  // mymute.render(
+  //   'nonexistent',
+  //   {foo: 'bar'},
+  //   myfunc,
+  //   {chosen: 'nonexistent'}
+  // );
 }());
