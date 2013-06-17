@@ -12,6 +12,8 @@ Why?
 
 mute.js was developed as a layer above underscore.js to provide a comfortable usage while staying small and simple.
 
+TODO: Explain include
+
 Install
 =======
 
