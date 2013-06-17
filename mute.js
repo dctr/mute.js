@@ -104,10 +104,9 @@
       cachedScripts[tplName] = func;
     };
 
-    renderCompiledTemplate = function (tplName, tplArgs, cb) {
+    renderCompiledTemplate = function (tplName, tplArgs, cb, cbArgs) {
       try {
         // Store callback arguments for use in inner function.
-        var cbArgs = Array.prototype.slice.call(arguments, 3);
         cachedScripts[tplName](
           function (processedTplArgs) {
             var html;
@@ -183,22 +182,23 @@
     that.render = function (tplName, tplArgs, cb) {
       // TODO: Validate input
       // TODO: Do not render if tplArgs === 'prefetch'
+      var cbArgs = Array.prototype.slice.call(arguments, 3);
       if (cachedTemplates[tplName]) {
         if (tplArgs !== 'prefetch') {
-          renderCompiledTemplate(tplName, tplArgs, cb, Array.prototype.slice.call(arguments, 3));
+          renderCompiledTemplate(tplName, tplArgs, cb, cbArgs);
         } else {
-          cb(undefined, undefined, Array.prototype.slice.call(arguments, 3));
+          cb(undefined, undefined, cbArgs);
         }
         return;
       }
       cache(tplName, function (err) {
-        if (err) { return cb(err, undefined, Array.prototype.slice.call(arguments, 3)); }
+        if (err) { return cb(err, undefined, cbArgs); }
         resolve(cachedEjs[tplName], function (err, res) {
           cachedTemplates[tplName] = _.template(res);
           if (tplArgs !== 'prefetch') {
-            renderCompiledTemplate(tplName, tplArgs, cb, Array.prototype.slice.call(arguments, 3));
+            renderCompiledTemplate(tplName, tplArgs, cb, cbArgs);
           } else {
-            cb(undefined, undefined, Array.prototype.slice.call(arguments, 3));
+            cb(undefined, undefined, cbArgs);
           }
         });
       });
