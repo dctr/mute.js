@@ -226,6 +226,6 @@ Explanation
 Thanks
 ======
 
-Thanks to Jesse Jiryu Davis for his article on including functionality for underscore.js.
+Thanks to Jesse Jiryu Davis (@ajdavis) for his article on including functionality for underscore.js.
 
 Thanks to Juraj Vitko (@ypocat) for his code on parallel async functions.
