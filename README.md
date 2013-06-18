@@ -1,7 +1,7 @@
 Mute.js
 =======
 
-Mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine that is small and simple but yet comfortable to use.
+Mute.js is a **m**inimalistic, **u**nderscore.js-based **t**emplate **e**ngine that is small and simple but yet comfortable.
 
 Currently, mute.js only features client-side usage and registers a global variable called *mute*. Support for node.js and require.js will be added later.
 
@@ -13,19 +13,19 @@ Key features:
 
 2. **Uses EJS template language**
 
-    The embedded JavaScript template language consists of a few simple additions to plain HTML and can embedd plain JavaScript. Thus, you do not need to learn an extra language, like with Jade.
+    The *embedded JavaScript* template language consists of a few simple additions to plain HTML and can embed plain JavaScript. Thus, you do not need to learn any extra language, like with Jade.
 
 3. **Adds convenience**
 
-    Mute.js wraps the powerful functionality of underscore.js' template function in a simple to use interface.
+    Mute.js wraps the powerful functionality of underscore.js' template function in a simple-to-use interface.
 
 4. **Adds include functionality**
 
-    Underscore.js's template function lacks the ability to include one template from another. Mute.js adds an <% include templateName %>.
+    Underscore.js' template function lacks the ability to include one template from another. Mute.js adds an <% include templateName %>-tag.
 
 5. **Async template loading with caching**
 
-    Mute.js loads needed templates asynchronously and caches already used ones, so no extra traffic overhead occurs.
+    Mute.js loads needed templates asynchronously and caches already used ones to save traffic.
 
 
 Why?
@@ -33,12 +33,10 @@ Why?
 
 I developed mute.js for two reasons:
 
-1. I consider EJS the best template language, because you do not need to learn any extra languages, for which you would need to know HTML and JavaScript anyway.
+1. I consider EJS the best template language, because it is simple and you do not need to learn any extra languages, for which you would need to know HTML and JavaScript anyway (KISS).
 2. Existing solutions did not satisfy my needs.
   - http://embeddedjs.com/ completely lacks documentation and is not that actively developed.
   - Underscore.js' template function lacks convenience.
-
-As a result, mute.js was developed as a layer above underscore.js to provide a comfortable usage while staying small and simple.
 
 
 Install
@@ -218,8 +216,10 @@ Explanation
 -----------
 
 - **yourSite.html** defines the HTML skeleton. It might contain header, footer, navigation, .... It's &lt;div role="main" /&gt; remains empty, as it is to be filled with content through mute.js.
-- **yourSite.js** is you regular site-managing JavaScript. Here, an event handler for the submit button in the login form of the HTML page is defined. If the submit button is clicked, the form data is submitted to mute.js' render function and the callback is invoked after completion.
+- **yourSite.js** is you regular site-managing JavaScript. Here, an event handler for the submit button in the login form of the HTML page is defined. If the submit button is clicked, the form data is submitted to mute.js' render function. The callback is invoked after completion and logs the results to console.
 - **templates/login.js** contains all code to process the given information.
   - **render** is the callback function that has to be called with an object, which's properties should be available in the template.
   - **data** is the object provided via the call to render in yourSite.js.
 - **templates/login.ejs** is an embedded JavaScript file. It has access to all the properties of the object provided though the login.js callback. Here it has access to message, but also to username and password.
+
+
