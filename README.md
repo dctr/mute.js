@@ -223,3 +223,9 @@ Explanation
 - **templates/login.ejs** is an embedded JavaScript file. It has access to all the properties of the object provided though the login.js callback. Here it has access to message, but also to username and password.
 
 
+Thanks
+======
+
+Thanks to Jesse Jiryu Davis for his article on including functionality for underscore.js.
+
+Thanks to Juraj Vitko (@ypocat) for his code on parallel async functions.
