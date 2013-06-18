@@ -224,13 +224,13 @@
 
   // To Node.js
   // WARN: Not ready yet!
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = constructor;
-  // To AMD / Require.js
-  } else if (typeof define !== 'undefined' && define.amd) {
-    define(modulename, [], function () { return constructor; });
-  // To browser's global object
-  } else {
-    window[modulename] = constructor;
-  }
+  // if (typeof module !== 'undefined' && module.exports) {
+  //   module.exports = constructor;
+  // // To AMD / Require.js
+  // } else if (typeof define !== 'undefined' && define.amd) {
+  //   define(modulename, [], function () { return constructor; });
+  // // To browser's global object
+  // } else {
+  window[modulename] = constructor;
+  // }
 }('mute'));
